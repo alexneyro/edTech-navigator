@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { db } from '../lib/firebase';
 import { Task, Subtask } from '../types';
 import { Trash2, Edit2, CheckSquare, Plus, X, Bot, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
@@ -11,7 +11,7 @@ interface TaskCardProps {
   index: number;
   onUpdate: (taskId: string, updates: Partial<Task>) => void;
   onDelete: (taskId: string) => void;
-  onAskAI?: (title: string, checklist: string[]) => void;
+  onAskAI?: (taskId: string) => void;
   readOnly?: boolean;
   onMove?: (taskId: string, newStatus: Task['status']) => void;
 }
@@ -71,7 +71,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, onUpdate, onDelete, on
       await updateDoc(taskRef, { subtasks: newSubtasks });
       setSubtaskToDelete(null);
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `tasks/${task.id}`);
+      console.error("Ошибка при удалении:", error);
     }
   };
 
@@ -129,7 +129,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, onUpdate, onDelete, on
               <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                 {onAskAI && (
                   <button 
-                    onClick={() => onAskAI(task.title, task.subtasks.map(s => s.text))} 
+                    onClick={() => onAskAI(task.id)} 
                     className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                     title="Помощь ИИ"
                   >

@@ -1,5 +1,3 @@
-const getProxyUrl = (url: string) => 'https://corsproxy.io/?' + encodeURIComponent(url);
-
 export interface AIModel {
   id: string;
   name?: string;
@@ -11,13 +9,12 @@ export const fetchAIModels = async (baseUrl: string, apiKey?: string): Promise<A
   }
   
   try {
-    const finalUrl = getProxyUrl(baseUrl + '/models');
-    const response = await fetch(finalUrl, {
+    const response = await fetch(`${baseUrl}/models`, {
       method: 'GET',
       headers: {
-        'Authorization': 'Bearer ' + apiKey,
-        'Content-Type': 'application/json'
-      }
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!response.ok) {
@@ -58,19 +55,20 @@ export const chatWithAI = async (
   }
 
   try {
-    const finalUrl = getProxyUrl(baseUrl + '/chat/completions');
-    const response = await fetch(finalUrl, {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + apiKey,
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': window.location.origin, // Required by some providers like OpenRouter
+        'X-Title': 'Цифровой Навигатор',
       },
       body: JSON.stringify({
         model,
         messages: [
           { role: 'system', content: systemPrompt },
           ...messages
-        ]
+        ],
       }),
     });
 
