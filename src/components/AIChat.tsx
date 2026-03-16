@@ -1,19 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { chatWithAI } from '../services/aiService';
 import { subscribeToAISettings, getActiveAIProfile } from '../services/dbService';
-import { AISettings } from '../types';
+import { AISettings, Task } from '../types';
 import { Send, Bot, User as UserIcon, Loader, MessageCircle, X, Circle } from 'lucide-react';
 import { parseMarkdown } from '../utils/markdown';
 
 interface AIChatProps {
   lessonContext?: string;
-  taskContext?: {
-    title: string;
-    checklist: string[];
-  } | null;
+  activeTask?: Task | null;
 }
 
-export default function AIChat({ lessonContext, taskContext }: AIChatProps) {
+export default function AIChat({ lessonContext, activeTask }: AIChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [input, setInput] = useState('');
@@ -21,6 +18,10 @@ export default function AIChat({ lessonContext, taskContext }: AIChatProps) {
   const [cooldown, setCooldown] = useState(0);
   const [settings, setSettings] = useState<AISettings | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const getSystemContext = (task: Task) => {
+    return `Текущий план выполнения задачи: ${task.subtasks.map(s => s.text).join(', ')}.`;
+  };
 
   // Subscribe to AI settings for real-time updates
   useEffect(() => {
@@ -30,12 +31,12 @@ export default function AIChat({ lessonContext, taskContext }: AIChatProps) {
     return () => unsubscribe();
   }, []);
 
-  // Open chat automatically if taskContext is provided
+  // Open chat automatically if activeTask is provided
   useEffect(() => {
-    if (taskContext) {
+    if (activeTask) {
       setIsOpen(true);
     }
-  }, [taskContext]);
+  }, [activeTask?.id]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -84,11 +85,9 @@ export default function AIChat({ lessonContext, taskContext }: AIChatProps) {
         assembledSystemPrompt += `\n\nКонтекст текущего урока:\n${lessonContext}`;
       }
       
-      if (taskContext) {
-        assembledSystemPrompt += `\n\nТы помогаешь ученику с конкретной задачей: "${taskContext.title}".`;
-        if (taskContext.checklist.length > 0) {
-          assembledSystemPrompt += `\nЧек-лист задачи:\n${taskContext.checklist.map(item => `- ${item}`).join('\n')}`;
-        }
+      if (activeTask) {
+        assembledSystemPrompt += `\n\nТы помогаешь ученику с конкретной задачей: "${activeTask.title}".`;
+        assembledSystemPrompt += `\n${getSystemContext(activeTask)}`;
       }
 
       const response = await chatWithAI(
@@ -146,10 +145,10 @@ export default function AIChat({ lessonContext, taskContext }: AIChatProps) {
       </div>
 
       {/* Context Indicator */}
-      {taskContext && (
+      {activeTask && (
         <div className="px-4 py-1.5 bg-blue-50/50 border-b border-blue-100 flex items-center gap-2 text-[9px] font-semibold text-blue-700">
           <div className="w-1 h-1 bg-blue-500 rounded-full animate-pulse"></div>
-          <span className="truncate">Вижу задачу: {taskContext.title}</span>
+          <span className="truncate">Вижу задачу: {activeTask.title}</span>
         </div>
       )}
 

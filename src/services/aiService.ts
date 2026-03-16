@@ -8,14 +8,28 @@ export const fetchAIModels = async (baseUrl: string, apiKey?: string): Promise<A
     throw new Error('API Key не указан');
   }
   
+  const isGroq = baseUrl.includes('groq.com');
+  
   try {
-    const response = await fetch('/.netlify/functions/ai-proxy', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ baseUrl, apiKey, action: 'models' }),
-    });
+    let response;
+    if (isGroq) {
+      const url = `https://corsproxy.io/?${baseUrl}/models`;
+      response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        }
+      });
+    } else {
+      response = await fetch('/.netlify/functions/ai-proxy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ baseUrl, apiKey, action: 'models' }),
+      });
+    }
 
     if (!response.ok) {
       let errorMessage = `Ошибка ${response.status}: ${response.statusText}`;
@@ -54,21 +68,42 @@ export const chatWithAI = async (
     throw new Error('API ключ не установлен. Пожалуйста, обратитесь к учителю.');
   }
 
+  const isGroq = baseUrl.includes('groq.com');
+
   try {
-    const response = await fetch('/.netlify/functions/ai-proxy', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        apiKey,
-        baseUrl,
-        model,
-        systemPrompt,
-        messages,
-        action: 'chat'
-      }),
-    });
+    let response;
+    if (isGroq) {
+      const url = `https://corsproxy.io/?${baseUrl}/chat/completions`;
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...messages
+          ]
+        }),
+      });
+    } else {
+      response = await fetch('/.netlify/functions/ai-proxy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          apiKey,
+          baseUrl,
+          model,
+          systemPrompt,
+          messages,
+          action: 'chat'
+        }),
+      });
+    }
 
     if (!response.ok) {
       if (response.status === 429) {

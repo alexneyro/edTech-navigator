@@ -24,7 +24,7 @@ const PRESETS = {
     model: 'google/gemini-2.0-flash-exp:free'
   },
   groq: {
-    name: 'Groq',
+    name: 'Groq (через Прокси)',
     baseUrl: 'https://api.groq.com/openai/v1',
     model: 'llama-3.3-70b-versatile'
   }

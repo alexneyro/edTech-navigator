@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getLessons, subscribeToAISettings } from '../services/dbService';
-import { Lesson, AISettings } from '../types';
+import { Lesson, AISettings, Task } from '../types';
 import KanbanBoard from './KanbanBoard';
 import AIChat from './AIChat';
 import { BookOpen, ExternalLink, ChevronDown, Lightbulb, CheckCircle2 } from 'lucide-react';
@@ -10,7 +10,8 @@ export default function StudentWorkspace() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [selectedLessonId, setSelectedLessonId] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [activeTaskContext, setActiveTaskContext] = useState<{ title: string; checklist: string[] } | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [settings, setSettings] = useState<AISettings | null>(null);
 
@@ -36,6 +37,7 @@ export default function StudentWorkspace() {
   };
 
   const selectedLesson = lessons.find(l => l.id === selectedLessonId);
+  const activeTask = tasks.find(t => t.id === activeTaskId);
   const userId = auth.currentUser?.uid;
 
   if (!userId) return <div>Пожалуйста, войдите в систему.</div>;
@@ -163,14 +165,15 @@ export default function StudentWorkspace() {
         <KanbanBoard 
           userId={userId} 
           lessonId={selectedLessonId} 
-          onAskAI={(title, checklist) => setActiveTaskContext({ title, checklist })}
+          onAskAI={(taskId) => setActiveTaskId(taskId)}
+          onTasksUpdate={setTasks}
         />
       </div>
 
       {/* Side Chat Panel */}
       <AIChat 
         lessonContext={selectedLesson?.description} 
-        taskContext={activeTaskContext}
+        activeTask={activeTask}
       />
     </div>
   );

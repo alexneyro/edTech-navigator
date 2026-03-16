@@ -12,10 +12,11 @@ interface KanbanBoardProps {
   userId: string;
   lessonId?: string;
   readOnly?: boolean;
-  onAskAI?: (title: string, checklist: string[]) => void;
+  onAskAI?: (taskId: string) => void;
+  onTasksUpdate?: (tasks: Task[]) => void;
 }
 
-export default function KanbanBoard({ userId, lessonId, readOnly = false, onAskAI }: KanbanBoardProps) {
+export default function KanbanBoard({ userId, lessonId, readOnly = false, onAskAI, onTasksUpdate }: KanbanBoardProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingReflectionTask, setPendingReflectionTask] = useState<Task | null>(null);
@@ -42,6 +43,7 @@ export default function KanbanBoard({ userId, lessonId, readOnly = false, onAskA
       setLoading(true);
       const unsubscribe = subscribeToUserTasks(userId, (data) => {
         setTasks(data);
+        if (onTasksUpdate) onTasksUpdate(data);
         setLoading(false);
       });
       return () => unsubscribe();
