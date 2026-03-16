@@ -9,10 +9,14 @@ export const fetchAIModels = async (baseUrl: string, apiKey?: string): Promise<A
   }
   
   try {
-    const response = await fetch(`${baseUrl}/models`, {
+    const url = baseUrl.includes('groq.com') 
+      ? `https://corsproxy.io/?${encodeURIComponent(`${baseUrl}/models`)}`
+      : `${baseUrl}/models`;
+
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${apiKey.trim()}`,
         'Content-Type': 'application/json',
       },
     });
@@ -55,13 +59,15 @@ export const chatWithAI = async (
   }
 
   try {
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    const url = baseUrl.includes('groq.com')
+      ? `https://corsproxy.io/?${encodeURIComponent(`${baseUrl}/chat/completions`)}`
+      : `${baseUrl}/chat/completions`;
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${apiKey.trim()}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': window.location.origin, // Required by some providers like OpenRouter
-        'X-Title': 'Цифровой Навигатор',
       },
       body: JSON.stringify({
         model,
