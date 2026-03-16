@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
+import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { UserProfile } from '../types';
 
 export default function Login() {
@@ -34,7 +34,11 @@ export default function Login() {
           name: name
         };
 
-        await setDoc(doc(db, 'users', user.uid), userProfile);
+        try {
+          await setDoc(doc(db, 'users', user.uid), userProfile);
+        } catch (err) {
+          handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}`);
+        }
       } else {
         // Login Logic
         await signInWithEmailAndPassword(auth, email, password);

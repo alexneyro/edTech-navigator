@@ -1,0 +1,108 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["student", "admin"] },
+        "name": { "type": "string" }
+      },
+      "required": ["uid", "email", "role", "name"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Kanban task for students",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "lessonId": { "type": "string" },
+        "title": { "type": "string" },
+        "status": { "type": "string", "enum": ["todo", "in-progress", "done"] },
+        "subtasks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "text": { "type": "string" },
+              "completed": { "type": "boolean" }
+            }
+          }
+        },
+        "reflection": {
+          "type": "object",
+          "properties": {
+            "method": { "type": "string", "enum": ["self", "ai", "teacher"] },
+            "difficulty": { "type": "string" }
+          }
+        },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "userId", "title", "status", "subtasks", "createdAt"]
+    },
+    "Lesson": {
+      "title": "Lesson",
+      "description": "MS Word lesson content",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "assignmentUrl": { "type": "string" },
+        "instructionUrl": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["id", "title", "description", "order"]
+    },
+    "AIProfile": {
+      "title": "AIProfile",
+      "description": "AI configuration profiles",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "apiKey": { "type": "string" },
+        "baseUrl": { "type": "string" },
+        "model": { "type": "string" },
+        "systemPrompt": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "name", "apiKey", "baseUrl", "model", "systemPrompt", "createdAt"]
+    },
+    "AISettings": {
+      "title": "AISettings",
+      "description": "Global AI settings",
+      "type": "object",
+      "properties": {
+        "activeProfileId": { "type": "string" },
+        "studentTips": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document"
+    },
+    "/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Task document"
+    },
+    "/lessons/{lessonId}": {
+      "schema": "Lesson",
+      "description": "Lesson document"
+    },
+    "/ai_profiles/{profileId}": {
+      "schema": "AIProfile",
+      "description": "AI profile document"
+    },
+    "/settings/ai": {
+      "schema": "AISettings",
+      "description": "Global AI settings document"
+    }
+  }
+}
