@@ -1,9 +1,7 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, Auth } from "firebase/auth";
-import { getFirestore, Firestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
-// TODO: Replace with your actual Firebase configuration
-// You can find this in the Firebase Console -> Project Settings -> General -> Your apps
 const firebaseConfig = {
   apiKey: "AIzaSyAfgqKn0v9xwyMkRBYR7snatyWJtTnl6Qg",
   authDomain: "diplom-kanban.firebaseapp.com",
@@ -13,31 +11,17 @@ const firebaseConfig = {
   appId: "1:61279007429:web:9c3c05d7218cd56eaaf6ac"
 };
 
-// Check if config is valid
-const hasConfig = !!(firebaseConfig.apiKey && firebaseConfig.projectId);
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
 
-let app;
-let auth: Auth;
-let db: Firestore;
-let initialized = false;
+// Экспортируем функцию как обычную константу
+export const handleFirestoreError = (error: any, operation: string = 'get', path: string | null = null) => {
+  console.error(`Firestore Error: ${operation}`, error);
+  return "Ошибка базы данных. Проверьте соединение.";
+};
 
-if (hasConfig) {
-  try {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-    initialized = true;
-  } catch (error) {
-    console.error("Firebase initialization error:", error);
-  }
-}
+// Экспортируем тип отдельно
+export type OperationType = 'create' | 'update' | 'delete' | 'list' | 'get' | 'write';
 
-if (!initialized) {
-  console.warn("Firebase configuration missing or invalid. App will run in setup mode.");
-  // Export dummy objects to prevent import errors, but they shouldn't be used
-  auth = {} as Auth;
-  db = {} as Firestore;
-}
-
-export const isFirebaseInitialized = initialized;
-export { auth, db };
+export default app;
