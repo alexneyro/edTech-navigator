@@ -1,83 +1,43 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
-import { getFirestore, Firestore, doc, getDocFromServer } from "firebase/firestore";
-import firebaseConfig from "../../firebase-applet-config.json";
+import { getFirestore, Firestore } from "firebase/firestore";
 
-export enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
+// TODO: Replace with your actual Firebase configuration
+// You can find this in the Firebase Console -> Project Settings -> General -> Your apps
+const firebaseConfig = {
+  apiKey: "AIzaSyAfgqKn0v9xwyMkRBYR7snatyWJtTnl6Qg",
+  authDomain: "diplom-kanban.firebaseapp.com",
+  projectId: "diplom-kanban",
+  storageBucket: "diplom-kanban.firebasestorage.app",
+  messagingSenderId: "61279007429",
+  appId: "1:61279007429:web:9c3c05d7218cd56eaaf6ac"
+};
 
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId: string | undefined;
-    email: string | null | undefined;
-    emailVerified: boolean | undefined;
-    isAnonymous: boolean | undefined;
-    tenantId: string | null | undefined;
-    providerInfo: {
-      providerId: string;
-      displayName: string | null;
-      email: string | null;
-      photoUrl: string | null;
-    }[];
-  }
-}
+// Check if config is valid
+const hasConfig = !!(firebaseConfig.apiKey && firebaseConfig.projectId);
 
 let app;
 let auth: Auth;
 let db: Firestore;
+let initialized = false;
 
-try {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-} catch (error) {
-  console.error("Firebase initialization error:", error);
-  throw error;
-}
-
-export const handleFirestoreError = (error: unknown, operationType: OperationType, path: string | null) => {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData.map(provider => ({
-        providerId: provider.providerId,
-        displayName: provider.displayName,
-        email: provider.email,
-        photoUrl: provider.photoURL
-      })) || []
-    },
-    operationType,
-    path
-  };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
-};
-
-// Validate Connection to Firestore
-async function testConnection() {
+if (hasConfig) {
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    initialized = true;
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration. ");
-    }
+    console.error("Firebase initialization error:", error);
   }
 }
-testConnection();
 
-export const isFirebaseInitialized = !!firebaseConfig.apiKey;
+if (!initialized) {
+  console.warn("Firebase configuration missing or invalid. App will run in setup mode.");
+  // Export dummy objects to prevent import errors, but they shouldn't be used
+  auth = {} as Auth;
+  db = {} as Firestore;
+}
+
+export const isFirebaseInitialized = initialized;
 export { auth, db };
